@@ -1,0 +1,136 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+
+using Castle.DynamicProxy;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Castle.DynamicProxy.FluentInterceptorHelpers
+{
+	public partial class FluentInterceptedMember<T>
+		where T : class
+	{
+<#
+	  for(int i = 1; i <= 6; i++)
+    {
+#>
+		IFluentInterceptedMember_PrecededBy<T> IFluentInterceptedMember<T>.PrecededBy<<# WriteTParams(i); #>>(Action<<# WriteTParams(i); #>> action)
+		{
+			CheckArguments(<# WriteTParamTypeof(i); #>); 
+
+			Before((i) =>
+				{
+					action(<# WriteTParamGet(i); #>);
+				});
+
+			return this;
+		}
+
+		IFluentInterceptedMember_FollowedBy<T> IFluentInterceptedMember<T>.FollowedBy<<# WriteTParams(i); #>>(Action<<# WriteTParams(i); #>> action)
+		{
+			CheckArguments(<# WriteTParamTypeof(i); #>); 
+
+			After((i) =>
+				{
+					action(<# WriteTParamGet(i); #>);
+				});
+			return this;
+		}
+
+		void IFluentInterceptedMember_FollowedBy<T>.PrecededBy<<# WriteTParams(i); #>>(Action<<# WriteTParams(i); #>> action)
+		{
+			CheckArguments(<# WriteTParamTypeof(i); #>); 
+
+			Before((i) =>
+				{
+					action(<# WriteTParamGet(i); #>);
+				});
+		}
+
+		void IFluentInterceptedMember_PrecededBy<T>.FollowedBy<<# WriteTParams(i); #>>(Action<<# WriteTParams(i); #>> action)
+		{
+			CheckArguments(<# WriteTParamTypeof(i); #>); 
+
+			After((i) =>
+				{
+					action(<# WriteTParamGet(i); #>);
+				});
+		}
+
+		void IFluentInterceptedMember<T>.ReplaceWith<<# WriteTParams(i); #>>(Action<<# WriteTParams(i); #>> action)
+		{
+			CheckArguments(<# WriteTParamTypeof(i); #>); 
+
+			Before((i) =>
+				{
+					action(<# WriteTParamGet(i); #>);
+				});
+
+			DoNotProceed();
+		}
+
+		void IFluentInterceptedMember<T>.ReplaceWith<<# WriteTParams(i); #>, TReturn>(Func<<# WriteTParams(i); #>, TReturn> action)
+		{
+			CheckArguments(<# WriteTParamTypeof(i); #>); 
+
+			Before((i) =>
+				{
+					i.ReturnValue = action(<# WriteTParamGet(i); #>);
+				});
+
+			DoNotProceed();
+		}
+<#
+    } 
+#>
+	}
+}
+
+
+<#+   // Class feature block
+
+private void WriteTParams(int count)
+{
+	for (int i = 1; i <= count; i++)
+	{
+		Write(string.Format("TParam{0}", i));
+		if (i != count)
+		{
+			Write(", ");
+		}
+	}  
+}
+
+private void WriteTParamGet(int count)
+{
+	for (int i = 1; i <= count; i++)
+	{
+		Write(string.Format("(TParam{0})i.GetArgumentValue({1})", i, i - 1));
+		if (i != count)
+		{
+			Write(", ");
+		}
+	}  
+}
+
+private void WriteTParamTypeof(int count)
+{
+	for (int i = 1; i <= count; i++)
+	{
+		Write(string.Format("typeof(TParam{0})", i));
+		if (i != count)
+		{
+			Write(", ");
+		}
+	}  
+}
+
+#>
